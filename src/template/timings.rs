@@ -31,17 +31,13 @@ impl Timings {
 
     /// Rehydrate timings from a JSON file. If not present, returns empty timings.
     pub fn read_from_file() -> Self {
-        let s = fs::read_to_string(TIMINGS_FILE_PATH)
+        fs::read_to_string(TIMINGS_FILE_PATH)
             .map_err(|x| x.to_string())
-            .and_then(Timings::try_from);
-
-        match s {
-            Ok(timings) => timings,
-            Err(e) => {
+            .and_then(Timings::try_from)
+            .unwrap_or_else(|e| {
                 eprintln!("{e}");
                 Timings::default()
-            }
-        }
+            })
     }
 
     /// Merge two sets of timings, overwriting `self` with `other` if present.

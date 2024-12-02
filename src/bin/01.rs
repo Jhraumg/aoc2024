@@ -7,7 +7,8 @@ pub fn part_one(input: &str) -> Option<u32> {
         .lines()
         .filter_map(|l| {
             l.split_whitespace()
-                .filter_map(|w| w.parse().ok())
+                // don't need error handling, but better see it as soon as possible
+                .map(|w| w.parse().unwrap())
                 .collect_tuple()
         })
         .collect();
@@ -33,7 +34,8 @@ pub fn part_two(input: &str) -> Option<u32> {
         .lines()
         .filter_map(|l| {
             l.split_whitespace()
-                .filter_map(|w| w.parse().ok())
+                // don't need error handling, but better see it as soon as possible
+                .map(|w| w.parse().unwrap())
                 .collect_tuple()
         })
         .collect();
