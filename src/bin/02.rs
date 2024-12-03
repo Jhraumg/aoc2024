@@ -41,15 +41,19 @@ pub fn part_two(input: &str) -> Option<usize> {
             .iter()
             .filter(|r| {
                 is_safe(r.iter().copied())
-                    || (0..reports.len()).any(|i| {
-                        is_safe(r.iter().enumerate().filter_map(|(j, v)| {
-                            if j != i {
-                                Some(*v)
-                            } else {
-                                None
-                            }
-                        }))
-                    })
+                    || (0..reports.len())
+                        .map(|i| {
+                            r.iter().enumerate().filter_map(
+                                move |(j, v)| {
+                                    if j != i {
+                                        Some(*v)
+                                    } else {
+                                        None
+                                    }
+                                },
+                            )
+                        })
+                        .any(is_safe)
             })
             .count(),
     )
