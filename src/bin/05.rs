@@ -1,17 +1,15 @@
 use itertools::Itertools;
 use std::cmp::Ordering;
 
-advent_of_code::solution!(05);
+advent_of_code::solution!(5);
 
 fn is_ordered(update: &[usize], rules: &[(usize, usize)]) -> bool {
     update.iter().enumerate().all(|(i, n)| {
         //let rules:Vec<_>=rules.iter().filter(|(first,_)|*first==*n).collect();
         !update[i + 1..].iter().any(|m| {
-            rules.iter().any(|(first, last)| {
-                let result = *last == *n && *first == *m;
-                // if result{println!("{n} <{m} in {update:?} but {rules:?}=>{first},{last}");}
-                result
-            })
+            rules
+                .iter()
+                .any(|(first, last)| *last == *n && *first == *m)
         })
     })
 }
@@ -54,51 +52,29 @@ pub fn part_one(input: &str) -> Option<u32> {
     )
 }
 
-fn sort(updates: &[usize], rules: &[(usize, usize)]) -> Vec<usize> {
-    let mut result = Vec::with_capacity(updates.len());
+#[derive(Debug, Eq, PartialEq)]
+struct SortableUdpade<'a> {
+    val: usize,
+    rules: &'a [(usize, usize)],
+}
 
-    let updates_ruled: Vec<_> = updates
-        .iter()
-        .filter(|u| {
-            rules
-                .iter()
-                .any(|(first, last)| *first == **u || *last == **u)
-        })
-        .copied()
-        .collect();
-    let mut remaining = updates_ruled.to_owned();
-    while remaining.len() > 1 {
-        // println!("{:?}", remaining);
-        let first = *remaining
+impl PartialOrd for SortableUdpade<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.rules
             .iter()
-            .find(|f| {
-                // TODO : replace other.contains() with remaining.any()
-                let other: Vec<_> = remaining.iter().filter(|o| **o != **f).copied().collect();
-                let is_before_some = rules
-                    .iter()
-                    .any(|(first, second)| *first == **f && other.contains(second));
-                let is_after_some = rules
-                    .iter()
-                    .enumerate()
-                    .any(|(i, (first, last))| other.iter().any(|o| *first == *o && *last == **f));
-                // println!("{f} is before {is_before_some} / is after {is_after_some}");
-                is_before_some && !is_after_some
+            .find_map(|(first, second)| match (*first, *second) {
+                (s, o) if s == self.val && o == other.val => Some(Ordering::Less),
+                (s, o) if s == other.val && o == self.val => Some(Ordering::Greater),
+                _ => None,
             })
-            .unwrap();
-        result.push(first);
-        remaining = remaining.into_iter().filter(|r| *r != first).collect_vec();
     }
-    result.push(remaining[0]);
-    updates
-        .into_iter()
-        .filter(|u| {
-            !rules
-                .iter()
-                .any(|(first, last)| *first == **u || *last == **u)
-        })
-        .for_each(|u| result.push(*u));
+}
 
-    result
+impl Ord for SortableUdpade<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other)
+            .expect("cannot sort values not described by rules")
+    }
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
@@ -125,11 +101,16 @@ pub fn part_two(input: &str) -> Option<u32> {
         })
         .collect();
 
+    let rules = &rules;
     Some(
         updates
             .into_iter()
-            .filter(|u| !is_ordered(u, &rules))
-            .map(|u| middle(&sort(&u, &rules)))
+            .filter(|u| !is_ordered(u, rules))
+            .map(|us| {
+
+                let sorted = us.into_iter().map(|val| SortableUdpade { val, rules }).sorted().map(|SortableUdpade { val, rules: _ }| val).collect_vec();
+                middle(&sorted)
+            })
             .sum::<usize>() as u32,
     )
 }
@@ -159,18 +140,31 @@ mod tests {
                 }
             })
             .collect();
-        let updates = [
+        let rules = &rules;
+        let mut updates = [
             vec![75, 97, 47, 61, 53],
             vec![61, 13, 29],
             vec![97, 13, 75, 29, 47],
-        ];
-        let results = [
+        ]
+        .into_iter()
+        .map(|us| {
+            us.into_iter()
+                .map(|val| SortableUdpade { val, rules })
+                .collect_vec()
+        })
+        .collect_vec();
+        let results = vec![
             vec![97, 75, 47, 61, 53],
             vec![61, 29, 13],
             vec![97, 75, 47, 29, 13],
         ];
         for i in 0..updates.len() {
-            assert_eq!(sort(&updates[i], &rules), results[i]);
+            updates[i].sort();
+            let sorted = updates[i]
+                .iter()
+                .map(|SortableUdpade { val, rules }| *val)
+                .collect_vec();
+            assert_eq!(sorted, results[i]);
         }
     }
     #[test]
