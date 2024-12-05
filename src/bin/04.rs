@@ -1,4 +1,3 @@
-use itertools::Itertools;
 advent_of_code::solution!(4);
 
 pub fn part_one(input: &str) -> Option<u32> {
