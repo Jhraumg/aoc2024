@@ -1,10 +1,7 @@
 advent_of_code::solution!(3);
 
 use regex::Regex;
-use std::num::ParseIntError;
-use std::str::FromStr;
 
-const RAW_REGEXP: &str = "mul\\(([0-9]{1,3}),([0-9]{1,3})\\)";
 pub fn part_one(input: &str) -> Option<u32> {
     let re = Regex::new("mul\\(([0-9]{1,3}),([0-9]{1,3})\\)").unwrap();
     Some(
