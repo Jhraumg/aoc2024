@@ -32,17 +32,17 @@ impl FromStr for Equation {
 impl Equation {
     fn can_solve(&self, operators: &[Operation]) -> bool {
         if self.operands.len() == 2 {
-            return self.result == self.operands[0] + self.operands[1]
-                || self.result == self.operands[0] * self.operands[1]
-                || {
-                    operators.contains(&Concat) && {
-                        let &[o1, o2] = &self.operands[..2] else {
-                            unreachable!("there's 2 operands")
-                        };
-                        let p10 = 10usize.pow(o2.ilog10() + 1);
-                        self.result == o1 * p10 + o2
-                    }
-                };
+            let &[o1, o2] = &self.operands[..2] else {
+                unreachable!("there are 2 operands")
+            };
+            return operators.iter().any(|o| match o {
+                Mult => self.result == o1 * o2,
+                Add => self.result == o1 + o2,
+                Concat => {
+                    let p10 = 10usize.pow(o2.ilog10() + 1);
+                    self.result == o1 * p10 + o2
+                }
+            });
         }
 
         let remaining = self.operands.len();
