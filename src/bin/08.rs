@@ -1,9 +1,9 @@
 use itertools::Itertools;
-use std::collections::{HashSet};
+use std::collections::{HashMap, HashSet};
 
 advent_of_code::solution!(8);
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 struct Point {
     x: isize,
     y: isize,
@@ -34,7 +34,7 @@ fn get_antinodes(p1: &Point, p2: &Point) -> [Point; 2] {
 }
 
 fn read_antennas(input: &[&str]) -> Vec<Antenna> {
-input
+    input
         .iter()
         .enumerate()
         .flat_map(|(y, l)| {
@@ -59,7 +59,6 @@ pub fn part_one(input: &str) -> Option<usize> {
     let rows: isize = input.len().try_into().unwrap();
     let cols: isize = input[0].len().try_into().unwrap();
 
-    // todo : map val -> Vec<Antenna>
     let antennas = read_antennas(&input);
 
     let antinodes: HashSet<_> = antennas
@@ -74,29 +73,33 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(antinodes.len())
 }
 
-fn is_antinode(p: &Point, antennas: &[Antenna]) -> bool {
-    let result = antennas
+fn is_antinode(p: &Point, pos_by_val: &HashMap<u8, Vec<Point>>) -> bool {
+    pos_by_val
         .iter()
-        .find(|a| a.pos == *p)
-        .map(|a| antennas.iter().filter(|&a1| a1.val == a.val).count() >= 3)
+        .find(|(_, positions)| positions.contains(p))
+        .map(|(_, positions)| positions.len() >= 3)
         .unwrap_or_else(|| {
-            antennas.iter().filter(|a| a.pos != *p).any(|a1| {
-                antennas.iter().any(|a2| {
-                    a2.pos != *p && a2.val == a1.val && a2.pos != a1.pos && {
+            pos_by_val.iter().any(|(_, positions)| {
+                positions
+                    .iter()
+                    .filter(|pos| **pos != *p)
+                    .combinations(2)
+                    .any(|positions| {
+                        let [p1, p2] = positions[0..2] else {
+                            unreachable!("combinations of 2 pos")
+                        };
                         let v1 = Point {
-                            x: a1.pos.x - p.x,
-                            y: a1.pos.y - p.y,
+                            x: p1.x - p.x,
+                            y: p1.y - p.y,
                         };
                         let v2 = Point {
-                            x: a2.pos.x - p.x,
-                            y: a2.pos.y - p.y,
+                            x: p2.x - p.x,
+                            y: p2.y - p.y,
                         };
                         (v1.x * v2.y) - (v1.y * v2.x) == 0
-                    }
-                })
+                    })
             })
-        });
-    result
+        })
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
@@ -105,13 +108,22 @@ pub fn part_two(input: &str) -> Option<usize> {
     let cols: isize = input[0].len().try_into().unwrap();
 
     let antennas = read_antennas(&input);
+    let positions_by_val =
+        antennas
+            .iter()
+            .fold(HashMap::<u8, Vec<Point>>::new(), |mut acc, antenna| {
+                acc.entry(antenna.val)
+                    .and_modify(|positions| positions.push(antenna.pos))
+                    .or_insert(vec![antenna.pos]);
+                acc
+            });
 
     Some(
         (0..cols)
             .map(|x| {
                 (0..rows)
                     .map(|y| Point { x, y })
-                    .filter(|p| is_antinode(p, &antennas))
+                    .filter(|p| is_antinode(p, &positions_by_val))
                     .count()
             })
             .sum(),
