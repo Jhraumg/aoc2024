@@ -21,6 +21,7 @@ fn read_disk(input: &str) -> Vec<Block> {
     disk
 }
 
+#[allow(dead_code)]
 fn print_disk(disk: &[Block]) {
     for b in disk {
         print!("{}", b.map_or(".".to_string(), |b| (b % 10).to_string()));
@@ -31,31 +32,32 @@ pub fn part_one(input: &str) -> Option<usize> {
     let disk = read_disk(input);
 
     let mut blocks_it = disk.iter();
-    let mut rev_fblocks_it = disk.iter().enumerate().filter(|(_,b)|b.is_some()).rev();
+    let mut rev_fblocks_it = disk.iter().enumerate().filter(|(_, b)| b.is_some()).rev();
 
-    let mut defragmented_d : Vec<Block> = Vec::with_capacity(disk.len());
-    let mut forward_id=0;
-    let mut rev_id = disk.len()-1;
+    let mut defragmented_d: Vec<Block> = Vec::with_capacity(disk.len());
+    let mut forward_id = 0;
+    let mut rev_id = disk.len() - 1;
     while forward_id < rev_id {
         forward_id += 1;
         if let Some(Some(fileid)) = blocks_it.next() {
-
             defragmented_d.push(Some(*fileid));
-
-        } else {
-            if let Some((j,b)) = rev_fblocks_it.next() {
-                rev_id =j;
-                if forward_id >= rev_id {break;}
-                defragmented_d.push(Some(b.unwrap()));
+        } else if let Some((j, b)) = rev_fblocks_it.next() {
+            rev_id = j;
+            if forward_id >= rev_id {
+                break;
             }
-
+            defragmented_d.push(Some(b.unwrap()));
         }
     }
 
-    assert_eq!(disk.iter().filter(|b|b.is_some()).count(), defragmented_d.iter().filter(|b|b.is_some()).count());
+    assert_eq!(
+        disk.iter().filter(|b| b.is_some()).count(),
+        defragmented_d.iter().filter(|b| b.is_some()).count()
+    );
 
     Some(
-        defragmented_d.iter()
+        defragmented_d
+            .iter()
             .enumerate()
             .map(|(i, b)| b.unwrap_or(0) * i)
             .sum(),
@@ -89,11 +91,10 @@ pub fn part_two(input: &str) -> Option<usize> {
 
     let last_file = disk.last().unwrap().file.unwrap();
     'file: for fileid in (1..last_file + 1).rev() {
-        let mut free_span: Span = Default::default();
-        let mut free_place = 0;
-        let mut new_free_len = 0;
-        let mut moved_file_place = 0;
-        let mut added_free_len_to_end = 0;
+        let mut free_span: Span;
+        let free_place;
+        let new_free_len;
+        let moved_file_place;
         {
             let (i, moved_span) = disk
                 .iter()
@@ -121,11 +122,11 @@ pub fn part_two(input: &str) -> Option<usize> {
         }
         free_span.file = Some(fileid);
 
-        if moved_file_place < disk.len() - 1 && disk[moved_file_place + 1].file.is_none(){
+        if moved_file_place < disk.len() - 1 && disk[moved_file_place + 1].file.is_none() {
             disk[moved_file_place + 1].len += disk[moved_file_place].len;
             disk.remove(moved_file_place);
-        }else{
-            disk[moved_file_place].file=None;
+        } else {
+            disk[moved_file_place].file = None;
         }
 
         disk[free_place] = free_span;
