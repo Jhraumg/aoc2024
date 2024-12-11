@@ -122,6 +122,7 @@ pub fn part_two(input: &str) -> Option<usize> {
         }
         free_span.file = Some(fileid);
 
+        // this is not really necessary since end empty spaces won't be used to defragmentation
         if moved_file_place < disk.len() - 1 && disk[moved_file_place + 1].file.is_none() {
             disk[moved_file_place + 1].len += disk[moved_file_place].len;
             disk.remove(moved_file_place);
