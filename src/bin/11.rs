@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use itertools::Itertools;
 
 advent_of_code::solution!(11);
 
@@ -19,13 +18,11 @@ fn len_after_blink(i: usize, nb_blinks: usize) -> usize {
     for _ in 0..nb_blinks {
         v = v
             .iter()
-            .flat_map(move |i| blink(*i).into_iter().filter_map(|j| j))
+            .flat_map(move |i| blink(*i).into_iter().flatten())
             .collect();
     }
     v.len()
 }
-
-
 
 pub fn part_one(input: &str) -> Option<usize> {
     let stones: Vec<usize> = input
@@ -37,31 +34,28 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let mut stones: Vec<usize> = input
+    let stones: Vec<usize> = input
         .split_whitespace()
         .map(|s| s.parse().unwrap())
         .collect();
 
-    let mut count_by_stones:HashMap<usize,usize> = HashMap::new();
+    let mut count_by_stones: HashMap<usize, usize> = HashMap::new();
 
     for s in stones {
         *count_by_stones.entry(s).or_insert(0) += 1;
     }
 
     for _ in 0..75 {
-        let mut new_counts:HashMap<usize,usize> = HashMap::new();
-        for (s,nb) in count_by_stones {
-            for ns in blink(s).into_iter().filter_map(|x|x){
+        let mut new_counts: HashMap<usize, usize> = HashMap::new();
+        for (s, nb) in count_by_stones {
+            for ns in blink(s).into_iter().flatten() {
                 *new_counts.entry(ns).or_insert(0) += nb;
             }
         }
         count_by_stones = new_counts;
-
     }
 
-    Some(
-        count_by_stones.values().sum()
-    )
+    Some(count_by_stones.values().sum())
 }
 
 #[cfg(test)]
