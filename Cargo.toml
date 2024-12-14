@@ -30,3 +30,4 @@ tinyjson = "2.5.1"
 # Solution dependencies
 itertools = "0.13.0"
 regex = "1.11.1"
+crossterm = "0.28.1"

@@ -74,7 +74,11 @@ impl Game {
         let max = max_push as isize;
         if by * ax - bx * ay != 0 {
             let nb_a = (by * px - bx * py) / (by * ax - bx * ay);
-            let nb_b = if bx != 0 {(px - nb_a * ax) / bx} else {(py - nb_a * ay) / by};
+            let nb_b = if bx != 0 {
+                (px - nb_a * ax) / bx
+            } else {
+                (py - nb_a * ay) / by
+            };
             if (0..=max).contains(&nb_a)
                 && (0..=max).contains(&nb_b)
                 && (px == nb_a * ax + nb_b * bx)
@@ -84,8 +88,7 @@ impl Game {
             } else {
                 return None;
             }
-        }
-        else if px * by - py * bx != 0 {
+        } else if px * by - py * bx != 0 {
             // no solution
             return None;
         }
