@@ -71,19 +71,20 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 // To be lowered if no image comes out
-const EDGE_LEN: usize = 5;
-const EDGE_THRESHOLD: usize = 7;
+const EDGE_LEN: usize = 4;
+
 pub fn maybe_christmas_tree(pos: &[(isize, isize)]) -> bool {
     // let's look for some \ edges ?
     let pos: HashSet<(isize, isize)> = pos.iter().copied().collect();
 
-    let se_edges_count = pos
-        .iter()
-        .filter(|(x, y)| (1..EDGE_LEN as isize).all(|i| pos.contains(&(*x + i, *y + i))))
-        .count();
-    // to be lowered if it is too high and not value comes out
-    // note that EDGE_LEN+2 long edges are counted twice, etc..
-    se_edges_count > EDGE_THRESHOLD
+    // looking for    #
+    // a triangle    # #
+    // shape        #   #
+    let triangle_found = pos.iter().any(|(x, y)| {
+        (1..EDGE_LEN as isize)
+            .all(|i| pos.contains(&(*x + i, *y + i)) && pos.contains(&(*x - i, *y + i)))
+    });
+    triangle_found
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
