@@ -1,6 +1,6 @@
 use crate::Direction::*;
-use std::collections::{HashMap, HashSet};
 
+use rustc_hash::{FxHashMap, FxHashSet};
 advent_of_code::solution!(16);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -69,7 +69,7 @@ impl Path {
         }
     }
 
-    fn next_move(&self, score: usize, maze: &HashSet<(usize, usize)>) -> Option<(Path, usize)> {
+    fn next_move(&self, score: usize, maze: &FxHashSet<(usize, usize)>) -> Option<(Path, usize)> {
         if self.end == self.pos {
             return None;
         }
@@ -85,7 +85,7 @@ impl Path {
     fn next_moves(
         &self,
         score: usize,
-        maze: &HashSet<(usize, usize)>,
+        maze: &FxHashSet<(usize, usize)>,
     ) -> [Option<(Path, usize)>; 3] {
         if self.end == self.pos {
             return [const { None }; 3];
@@ -107,7 +107,7 @@ impl Path {
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
-    let mut maze = HashSet::new();
+    let mut maze = FxHashSet::default();
     for (j, l) in input.lines().enumerate() {
         for (i, c) in l.chars().enumerate() {
             if c == '.' {
@@ -118,8 +118,8 @@ pub fn part_one(input: &str) -> Option<usize> {
     let maze = &maze;
 
     // ~ Dijkstra
-    let mut best_moves: HashMap<Path, usize> = HashMap::new();
-    let mut visited: HashSet<Path> = HashSet::new();
+    let mut best_moves: FxHashMap<Path, usize> = Default::default();
+    let mut visited: FxHashSet<Path> = Default::default();
     best_moves.insert(Path::read(input), 0);
 
     while let Some((p, score)) = best_moves
@@ -148,7 +148,7 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let mut maze = HashSet::new();
+    let mut maze = FxHashSet::default();
     for (j, l) in input.lines().enumerate() {
         for (i, c) in l.chars().enumerate() {
             if c == '.' {
@@ -159,14 +159,15 @@ pub fn part_two(input: &str) -> Option<usize> {
     let maze = &maze;
 
     // ~ Dijkstra
-    let mut best_moves: HashMap<Path, (usize, HashSet<(usize, usize)>)> = HashMap::new();
-    let mut visited: HashSet<Path> = HashSet::new();
+    let mut best_moves: FxHashMap<Path, (usize, FxHashSet<(usize, usize)>)> = Default::default();
+    let mut visited: FxHashSet<Path> = Default::default();
     let init = Path::read(input);
-    best_moves.insert(init, (0, HashSet::from([init.pos])));
+
+    best_moves.insert(init, (0, FxHashSet::from_iter([init.pos])));
 
     while let Some((p, (score, on_path))) = best_moves
         .iter()
-        .filter(|(p, _)| !visited.contains(p))
+        .filter(|(p, _)| !visited.contains(*p))
         .min_by(|(_, (s1, _)), (_, (s2, _))| s1.cmp(s2))
     {
         let on_path = on_path.clone();
