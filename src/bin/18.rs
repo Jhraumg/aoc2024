@@ -15,22 +15,7 @@ pub fn read_blocks(input: &str) -> Vec<(usize, usize)> {
         })
         .collect()
 }
-fn escape_memory(blocks: &[(usize, usize)], edge: usize, after: usize) -> Option<usize> {
-    // FIXME : this is not a time rush !!
-    let time_by_blocks: FxHashMap<(usize, usize), usize> = if after > 0 {
-        blocks
-            .iter()
-            .enumerate()
-            .filter(|(t, _)| *t < after)
-            .map(|(_, coord)| (*coord, 0))
-            .collect()
-    } else {
-        blocks
-            .iter()
-            .enumerate()
-            .map(|(t, coord)| (*coord, t))
-            .collect()
-    };
+fn escape_memory(blocks: &FxHashSet<(usize, usize)>, edge: usize) -> Option<usize> {
     let mut best_moves: FxHashMap<(usize, usize), usize> = Default::default();
 
     let mut visited: FxHashSet<(usize, usize)> = Default::default();
@@ -54,12 +39,8 @@ fn escape_memory(blocks: &[(usize, usize)], edge: usize, after: usize) -> Option
         ]
         .into_iter()
         .flatten()
-        .filter(|(x, y)| {
-            time_by_blocks
-                .get(&(*x, *y))
-                .map(|tb| *tb > t + 1)
-                .unwrap_or(true)
-        }) {
+        .filter(|(x, y)| !blocks.contains(&(*x, *y)))
+        {
             best_moves
                 .entry(next_move)
                 .and_modify(|pt| *pt = min(t + 1, *pt))
@@ -72,16 +53,27 @@ fn escape_memory(blocks: &[(usize, usize)], edge: usize, after: usize) -> Option
 }
 pub fn first_blocking(input: &str, edge: usize) -> (usize, usize) {
     let blocks = read_blocks(input);
-    for after in 1.. {
-        if escape_memory(&blocks, edge, after).is_none() {
-            return blocks[after - 1];
+    let mut pmin = 1;
+    let mut pmax = blocks.len();
+
+    while pmin < pmax {
+        let p = (pmin + pmax) / 2;
+        let current_bloks = FxHashSet::from_iter(blocks.iter().take(p).cloned());
+        if escape_memory(&current_bloks, edge).is_some() {
+            // au dessus
+            pmin = p + 1;
+        } else {
+            // en dessous
+            pmax = p;
         }
     }
-    unreachable!();
+    blocks[pmin - 1]
 }
+
 pub fn part_one(input: &str) -> Option<usize> {
     let blocks: Vec<(usize, usize)> = read_blocks(input);
-    escape_memory(&blocks, 70, 1024)
+    let blocks = FxHashSet::from_iter(blocks[0..1024].iter().copied());
+    escape_memory(&blocks, 70)
 }
 
 pub fn part_two(input: &str) -> Option<String> {
@@ -96,7 +88,8 @@ mod tests {
     fn test_part_one() {
         let blocks: Vec<(usize, usize)> =
             read_blocks(&advent_of_code::template::read_file("examples", DAY));
-        let result = escape_memory(&blocks, 6, 12);
+        let blocks = FxHashSet::from_iter(blocks[0..12].iter().copied());
+        let result = escape_memory(&blocks, 6);
         assert_eq!(result, Some(22));
     }
 
