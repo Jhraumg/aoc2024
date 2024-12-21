@@ -36,7 +36,6 @@ fn read_track(input: &str) -> Track {
     Track { s, e, pos }
 }
 impl Track {
-
     pub fn possible_cheats(
         &self,
         pos: (usize, usize),
