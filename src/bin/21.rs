@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 advent_of_code::solution!(21);
