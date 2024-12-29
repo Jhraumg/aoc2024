@@ -232,7 +232,12 @@ pub fn part_two(input: &str) -> Option<String> {
             .collect();
     }
 
-    assert_eq!(result.len(), 8, "only {} invalid gate output found", result.len());
+    assert_eq!(
+        result.len(),
+        8,
+        "only {} invalid gate output found",
+        result.len()
+    );
 
     Some(result.iter().sorted().join(","))
 }

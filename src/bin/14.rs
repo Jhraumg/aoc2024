@@ -87,6 +87,8 @@ pub fn maybe_christmas_tree(pos: &[(isize, isize)]) -> bool {
     triangle_found
 }
 
+// set to false when filter is selective enough
+const DISPLAY_ON_TERM: bool = false;
 pub fn part_two(input: &str) -> Option<usize> {
     let robots: Vec<Robot> = input.lines().map(Robot::new).collect();
 
@@ -99,33 +101,37 @@ pub fn part_two(input: &str) -> Option<usize> {
 
         if maybe_christmas_tree(&pos) {
             tries += 1;
-            display.execute(Clear(ClearType::All)).unwrap();
-            display.execute(SetForegroundColor(DarkGreen)).unwrap();
-            for (x, y) in &pos {
+            if DISPLAY_ON_TERM {
+                display.execute(Clear(ClearType::All)).unwrap();
+                display.execute(SetForegroundColor(DarkGreen)).unwrap();
+                for (x, y) in &pos {
+                    display
+                        .queue(crossterm::cursor::MoveTo(*x as u16, *y as u16))
+                        .unwrap()
+                        .queue(crossterm::style::Print('#'))
+                        .unwrap();
+                }
                 display
-                    .queue(crossterm::cursor::MoveTo(*x as u16, *y as u16))
+                    .queue(crossterm::cursor::MoveTo(0, 1 + H as u16))
                     .unwrap()
-                    .queue(crossterm::style::Print('#'))
+                    .queue(crossterm::style::Print(format!("time: {}", t)))
                     .unwrap();
+
+                display
+                    .queue(crossterm::cursor::MoveTo(20, 1 + H as u16))
+                    .unwrap()
+                    .queue(crossterm::style::Print(format!("tries: {}", tries)))
+                    .unwrap();
+
+                display.flush().unwrap();
+                sleep(Duration::from_millis(500));
+            } else {
+                //
+                return Some(t.try_into().unwrap());
             }
-            display
-                .queue(crossterm::cursor::MoveTo(0, 1 + H as u16))
-                .unwrap()
-                .queue(crossterm::style::Print(format!("time: {}", t)))
-                .unwrap();
-
-            display
-                .queue(crossterm::cursor::MoveTo(20, 1 + H as u16))
-                .unwrap()
-                .queue(crossterm::style::Print(format!("tries: {}", tries)))
-                .unwrap();
-
-            display.flush().unwrap();
-            sleep(Duration::from_millis(500));
         }
     }
-    println!("All value seen");
-    None
+    unreachable!("All value seen");
 }
 
 #[cfg(test)]

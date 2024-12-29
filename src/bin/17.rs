@@ -172,8 +172,8 @@ pub fn part_two(input: &str) -> Option<Val> {
             a,
             ..computer.clone()
         };
-        let out = cp.process();
-        println!("{a:48b} => {:?} / {:?}", out, &computer.instrs);
+        let _out = cp.process();
+        // println!("{a:48b} => {:?} / {:?}", out, &computer.instrs);
 
         for (i, (r, o)) in computer
             .instrs

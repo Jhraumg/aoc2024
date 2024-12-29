@@ -1,6 +1,7 @@
-use std::collections::HashSet;
+
 use std::fmt::{Display, Formatter, Write};
 use std::str::FromStr;
+use rustc_hash::FxHashSet;
 
 advent_of_code::solution!(6);
 
@@ -22,11 +23,11 @@ enum Dir {
 struct Area {
     width: usize,
     height: usize,
-    obstacles: HashSet<Point>,
+    obstacles: FxHashSet<Point>,
     guard: Point,
     gdir: Dir,
-    visited: HashSet<Point>,
-    visited_dir: HashSet<(Point, Dir)>,
+    visited: FxHashSet<Point>,
+    visited_dir: FxHashSet<(Point, Dir)>,
 }
 
 impl FromStr for Area {
@@ -66,9 +67,9 @@ impl FromStr for Area {
             })
             .next()
             .unwrap();
-        let mut visited = HashSet::new();
+        let mut visited :FxHashSet<Point>= Default::default();
         visited.insert(guard);
-        let mut visited_dir = HashSet::new();
+        let mut visited_dir:FxHashSet<(Point,Dir)> = Default::default();
         visited_dir.insert((guard, gdir));
 
         Ok(Self {
@@ -184,7 +185,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let mut area = Area::from_str(input).unwrap();
 
-    let mut new_obstacles = HashSet::new();
+    let mut new_obstacles :FxHashSet<_>= Default::default();
     let mut count = 0;
 
     // for each tick, we try to replace the next move with an obstacle, then

@@ -1,5 +1,6 @@
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::cmp::min;
+use rayon::prelude::*;
 
 advent_of_code::solution!(20);
 
@@ -118,7 +119,7 @@ pub fn count_shortcuts_over(input: &str, shortcut: usize, cheet_len: usize) -> u
     let distance_from_end = get_distance_from_end(input); // FIXME : read input only once
 
     distance_from_end
-        .iter()
+        .par_iter()
         .filter(|(_, d)| **d > shortcut)
         .map(|(pos, t)| {
             track

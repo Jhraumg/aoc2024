@@ -1,5 +1,5 @@
+use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
-
 advent_of_code::solution!(22);
 
 fn mix(secret: usize, value: usize) -> usize {
@@ -25,61 +25,51 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let mut secrets: Vec<usize> = input.lines().map(|l| l.parse().unwrap()).collect();
+    let secrets: Vec<usize> = input.lines().map(|l| l.parse().unwrap()).collect();
 
-    let mut changes: FxHashSet<[isize; 4]> = FxHashSet::default();
     let secrets1: Vec<_> = secrets.iter().copied().map(update_secret).collect();
     let secrets2: Vec<_> = secrets1.iter().copied().map(update_secret).collect();
     let secrets3: Vec<_> = secrets2.iter().copied().map(update_secret).collect();
     let secrets4: Vec<_> = secrets3.iter().copied().map(update_secret).collect();
-    let mut secrets_and_changes: Vec<(usize, [isize; 4])> = (0..secrets.len())
+
+
+    let first_encouters: Vec<FxHashMap<[isize; 4], usize>> = (0..secrets.len())
+        .into_par_iter()
         .map(|i| {
-            (
-                secrets4[i],
-                [
-                    (secrets1[i] % 10) as isize - (secrets[i] % 10) as isize,
-                    (secrets2[i] % 10) as isize - (secrets1[i] % 10) as isize,
-                    (secrets3[i] % 10) as isize - (secrets2[i] % 10) as isize,
-                    (secrets4[i] % 10) as isize - (secrets3[i] % 10) as isize,
-                ],
-            )
-        })
-        .collect();
-    secrets = secrets4;
+            let mut secret = secrets4.get(i).copied().unwrap();
+            let mut change = [
+                (secrets1[i] % 10) as isize - (secrets[i] % 10) as isize,
+                (secrets2[i] % 10) as isize - (secrets1[i] % 10) as isize,
+                (secrets3[i] % 10) as isize - (secrets2[i] % 10) as isize,
+                (secrets4[i] % 10) as isize - (secrets3[i] % 10) as isize,
+            ];
+            let mut first_encounter: FxHashMap<[isize; 4], usize> = FxHashMap::from_iter(vec![(change,secret)]);
 
-    let mut first_encouter: Vec<FxHashMap<[isize; 4], usize>> =
-        vec![FxHashMap::default(); secrets.len()];
-
-    // FIXME : look for period on each secret
-    for _ in 0..2000 - 4 {
-        let new_secrets_and_changes: Vec<_> = secrets_and_changes
-            .iter()
-            .enumerate()
-            .map(|(i, (sec, change))| {
-                first_encouter[i].entry(*change).or_insert(*sec % 10);
-                changes.insert(*change);
-                let new_sec = update_secret(*sec);
+            for _ in 0..2000 - 4 {
+                let new_sec = update_secret(secret);
                 let new_change = [
                     change[1],
                     change[2],
                     change[3],
-                    (new_sec % 10) as isize - (*sec % 10) as isize,
+                    (new_sec % 10) as isize - (secret % 10) as isize,
                 ];
-                changes.insert(new_change);
-                first_encouter[i].entry(new_change).or_insert(new_sec % 10);
-                (new_sec, new_change)
-            })
-            .collect();
+                first_encounter.entry(new_change).or_insert(new_sec % 10);
+                secret = new_sec;
+                change = new_change;
+            }
+            first_encounter
+        })
+        .collect();
 
-        secrets_and_changes = new_secrets_and_changes;
-    }
+    let changes: FxHashSet<&[isize; 4]> =
+        FxHashSet::from_iter(first_encouters.iter().flat_map(|map| map.keys()));
 
     changes
-        .into_iter()
+        .into_par_iter()
         .map(|change| {
-            first_encouter
+            first_encouters
                 .iter()
-                .filter_map(|local_changes| local_changes.get(&change))
+                .filter_map(|local_changes| local_changes.get(change))
                 .sum::<usize>()
         })
         .max()
