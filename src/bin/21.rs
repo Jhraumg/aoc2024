@@ -212,7 +212,7 @@ fn next_chars(init: char, end: char) -> String {
     if init == '>' && end == 'v' {
         return "<A".to_string();
     }
-    println!("unexpected {init}{end}");
+    eprintln!("unexpected {init}{end}");
     unreachable!()
 }
 

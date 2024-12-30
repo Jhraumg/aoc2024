@@ -50,7 +50,7 @@ impl Computer {
     }
     fn get_operand(&mut self) -> Option<u8> {
         if self.sp >= self.instrs.len() {
-            println!("end of instrs reach !");
+            eprintln!("end of instrs reach !");
             return None;
         }
         self.sp += 1;
@@ -173,7 +173,6 @@ pub fn part_two(input: &str) -> Option<Val> {
             ..computer.clone()
         };
         let _out = cp.process();
-        // println!("{a:48b} => {:?} / {:?}", out, &computer.instrs);
 
         for (i, (r, o)) in computer
             .instrs
@@ -186,7 +185,7 @@ pub fn part_two(input: &str) -> Option<Val> {
             if r != o {
                 result[i] += 1;
                 if result[i] == 8 {
-                    println!(
+                    eprintln!(
                         "ERROR {:?} => {:?} instead of {:?}",
                         result, &cp.out, &cp.instrs
                     );

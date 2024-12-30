@@ -52,7 +52,6 @@ fn count_3cycles_with_t(interco: &FxHashSet<(&str, &str)>) -> usize {
                                 return false;
                             }
                             if it == c && oc != tc && candidates.contains(oc) {
-                                // println!("{tc} - {c} - {oc}");
                                 return true;
                             }
                             false

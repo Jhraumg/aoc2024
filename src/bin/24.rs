@@ -53,19 +53,6 @@ fn compute(init: &FxHashMap<&str, bool>, gates: &[Gate]) -> Option<usize> {
     let outputs: Vec<_> = outputs.into_iter().sorted().collect();
 
     while outputs.iter().any(|o| !statuses.contains_key(o)) {
-        // println!("computing, missing '{}'", outputs.iter().filter((|o| !statuses.contains_key(*o))).join(", "));
-        // for v in ["krs", "mhr", "x38", "y38","mph", "sqw","vmv", "gft","z39","x39", "y39"]{
-        //
-        //     print!(" {v}:{:?} ", statuses.get(v));
-        // }
-        // println!();
-        //
-        // for g in gates {
-        //     if g.entries.contains(&"x39") && g.entries.contains(&"y39") {
-        //         println!("{g:?}");
-        //     }
-        // }
-
         let gates_to_compute: Vec<_> = gates
             .iter()
             .filter(|g| !statuses.contains_key(g.output))
@@ -73,7 +60,6 @@ fn compute(init: &FxHashMap<&str, bool>, gates: &[Gate]) -> Option<usize> {
         for g in gates_to_compute {
             if let Some(entry1) = statuses.get(g.entries[0]).copied() {
                 if let Some(entry2) = statuses.get(g.entries[1]).copied() {
-                    // println!("{entry1} {entry2} => computing {}", g.output);
                     let result = match g.op {
                         "AND" => entry1 && entry2,
                         "OR" => entry1 || entry2,
@@ -85,7 +71,6 @@ fn compute(init: &FxHashMap<&str, bool>, gates: &[Gate]) -> Option<usize> {
             }
         }
     }
-    // println!("{}\n{outputs:?}", statuses.iter().map(|(k,v)| format!("{k} : {v}")).sorted().join("\n"));
 
     outputs
         .iter()

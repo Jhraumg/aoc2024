@@ -174,11 +174,9 @@ impl Area {
 
 pub fn part_one(input: &str) -> Option<u32> {
     let mut area = Area::from_str(input).unwrap();
-    // println!("{}", area);
 
     while !area.tick(false).0 {}
 
-    // println!("{}", area);
     Some(area.visited.len() as u32)
 }
 
