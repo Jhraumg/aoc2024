@@ -121,14 +121,26 @@ pub fn part_one(input: &str) -> Option<usize> {
     let mut best_moves: FxHashMap<Path, usize> = Default::default();
     let mut visited: FxHashSet<Path> = Default::default();
     best_moves.insert(Path::read(input), 0);
+    let mut next_moves = best_moves.clone();
 
-    while let Some((p, score)) = best_moves
+    while let Some((p, score)) = next_moves
         .iter()
-        .filter(|(p, _)| !visited.contains(p))
+        // .filter(|(p, _)| !visited.contains(p))
         .min_by(|(_, s1), (_, s2)| s1.cmp(s2))
     {
-        visited.insert(*p);
-        for (p, score) in p.next_moves(*score, maze).iter().flatten() {
+        let p=*p;
+        let score=*score;
+        visited.insert(p);
+        next_moves.remove(&p);
+        for (p, score) in p.next_moves(score, maze).iter().flatten() {
+            if ! visited.contains(p) {
+                next_moves .entry(*p).and_modify(|best| {
+                    if *score < *best {
+                        *best = *score;
+                    }
+                })
+                    .or_insert(*score);
+            }
             best_moves
                 .entry(*p)
                 .and_modify(|best| {
@@ -164,16 +176,29 @@ pub fn part_two(input: &str) -> Option<usize> {
     let init = Path::read(input);
 
     best_moves.insert(init, (0, FxHashSet::from_iter([init.pos])));
+    let mut next_moves : FxHashMap<Path,usize> = Default::default();
+    next_moves.insert(init, 0);
 
-    while let Some((p, (score, on_path))) = best_moves
+    while let Some((p, score)) = next_moves
         .iter()
-        .filter(|(p, _)| !visited.contains(*p))
-        .min_by(|(_, (s1, _)), (_, (s2, _))| s1.cmp(s2))
+        // .filter(|(p, _)| !visited.contains(*p))
+        .min_by(|(_, s1), (_,s2)| s1.cmp(s2))
     {
-        let on_path = on_path.clone();
+        let p=*p;
+        let score=*score;
+        let on_path = best_moves.get(&p).cloned().unwrap().1;
 
-        visited.insert(*p);
-        for (p, score) in p.next_moves(*score, maze).iter().flatten() {
+        visited.insert(p);
+        next_moves.remove(&p);
+        for (p, score) in p.next_moves(score, maze).iter().flatten() {
+            if ! visited.contains(p) {
+                next_moves .entry(*p).and_modify(|best| {
+                    if *score < *best {
+                        *best = *score;
+                    }
+                })
+                    .or_insert(*score);
+            }
             best_moves
                 .entry(*p)
                 .and_modify(|(best, on_path_previous)| {
