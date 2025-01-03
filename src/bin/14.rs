@@ -3,7 +3,7 @@ use crossterm::style::SetForegroundColor;
 use crossterm::terminal::{Clear, ClearType};
 use crossterm::{ExecutableCommand, QueueableCommand};
 use itertools::Itertools;
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::io::{stdout, Write};
 use std::thread::sleep;
 use std::time::Duration;
@@ -75,7 +75,7 @@ const EDGE_LEN: usize = 4;
 
 pub fn maybe_christmas_tree(pos: &[(isize, isize)]) -> bool {
     // let's look for some \ edges ?
-    let pos: HashSet<(isize, isize)> = pos.iter().copied().collect();
+    let pos: FxHashSet<(isize, isize)> = pos.iter().copied().collect();
 
     // looking for    #
     // a triangle    # #

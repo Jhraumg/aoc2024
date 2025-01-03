@@ -1,6 +1,6 @@
+use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::cmp::min;
-use rayon::prelude::*;
 
 advent_of_code::solution!(20);
 
@@ -45,17 +45,21 @@ impl Track {
         let mut result: FxHashMap<(usize, usize), usize> = Default::default();
         let (x, y) = pos;
 
-        let mut cheets: FxHashSet<(usize, usize)> =
+        let mut visited: FxHashSet<(usize, usize)> = FxHashSet::default();
+        let mut cheats: FxHashSet<(usize, usize)> =
             [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
                 .into_iter()
                 //.filter(|p| !self.pos.contains(p)) // you can cheet while keeping on track !!
                 .collect();
         for t in 1..len {
             let mut new_in: FxHashSet<(usize, usize)> = Default::default();
-            let mut new_cheets: FxHashSet<(usize, usize)> = Default::default();
-            for p in cheets.iter().flat_map(|previous_cheet| {
-                let (x, y) = *previous_cheet;
-                [
+            let mut new_cheats: FxHashSet<(usize, usize)> = Default::default();
+
+            for previous_cheat in cheats {
+                let (x, y) = previous_cheat;
+                visited.insert(previous_cheat);
+
+                for p in [
                     if x > 0 { Some((x - 1, y)) } else { None },
                     Some((x + 1, y)),
                     if y > 0 { Some((x, y - 1)) } else { None },
@@ -63,19 +67,21 @@ impl Track {
                 ]
                 .into_iter()
                 .flatten()
-            }) {
-                if self.pos.contains(&p) || self.e == p || self.s == p {
-                    new_in.insert(p);
-                }
+                {
+                    if self.pos.contains(&p) || self.e == p || self.s == p {
+                        new_in.insert(p);
+                    }
 
-                new_cheets.insert(p);
+                    if !visited.contains(&p) {
+                        new_cheats.insert(p);
+                    }
+                }
             }
+
             for ni in new_in.into_iter() {
                 result.entry(ni).or_insert(t + 1);
             }
-            //else {
-            cheets = new_cheets;
-            //}
+            cheats = new_cheats;
         }
 
         result.remove(&pos);
@@ -89,26 +95,28 @@ fn get_distance_from_end(input: &str) -> FxHashMap<(usize, usize), usize> {
 
     let mut result: FxHashMap<(usize, usize), usize> = FxHashMap::default();
     result.insert(track.e, 0);
+    let mut next_moves = result.clone();
     let mut visited: FxHashSet<(usize, usize)> = Default::default();
 
-    // FIXME : just
-    while let Some(((x, y), t)) = result
-        .iter()
-        .filter(|(pos, _)| !visited.contains(*pos))
-        .max_by(|(_, t1), (_, t2)| t1.cmp(t2))
-    {
+    while let Some(((x, y), t)) = next_moves.iter().max_by(|(_, t1), (_, t2)| t1.cmp(t2)) {
         let (x, y, t) = (*x, *y, *t);
-
+        visited.insert((x, y));
+        next_moves.remove(&(x, y));
         for next_move in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
             .into_iter()
             .filter(|p| track.pos.contains(p) || track.e == *p || track.s == *p)
+            .filter(|p| !visited.contains(p))
         {
+            next_moves
+                .entry(next_move)
+                .and_modify(|pt| *pt = min(t + 1, *pt))
+                .or_insert(t + 1);
+
             result
                 .entry(next_move)
                 .and_modify(|pt| *pt = min(t + 1, *pt))
                 .or_insert(t + 1);
         }
-        visited.insert((x, y));
     }
 
     result
@@ -128,8 +136,8 @@ pub fn count_shortcuts_over(input: &str, shortcut: usize, cheet_len: usize) -> u
                 .filter(|(cheet, d)| {
                     distance_from_end
                         .get(cheet)
-                        .filter(|cd| shortcut + **cd + *d <= *t)
-                        .is_some()
+                        .map(|cd| shortcut + *cd + *d <= *t)
+                        .unwrap_or(false)
                 })
                 .count()
         })

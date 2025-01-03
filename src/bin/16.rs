@@ -128,17 +128,19 @@ pub fn part_one(input: &str) -> Option<usize> {
         // .filter(|(p, _)| !visited.contains(p))
         .min_by(|(_, s1), (_, s2)| s1.cmp(s2))
     {
-        let p=*p;
-        let score=*score;
+        let p = *p;
+        let score = *score;
         visited.insert(p);
         next_moves.remove(&p);
         for (p, score) in p.next_moves(score, maze).iter().flatten() {
-            if ! visited.contains(p) {
-                next_moves .entry(*p).and_modify(|best| {
-                    if *score < *best {
-                        *best = *score;
-                    }
-                })
+            if !visited.contains(p) {
+                next_moves
+                    .entry(*p)
+                    .and_modify(|best| {
+                        if *score < *best {
+                            *best = *score;
+                        }
+                    })
                     .or_insert(*score);
             }
             best_moves
@@ -176,27 +178,29 @@ pub fn part_two(input: &str) -> Option<usize> {
     let init = Path::read(input);
 
     best_moves.insert(init, (0, FxHashSet::from_iter([init.pos])));
-    let mut next_moves : FxHashMap<Path,usize> = Default::default();
+    let mut next_moves: FxHashMap<Path, usize> = Default::default();
     next_moves.insert(init, 0);
 
     while let Some((p, score)) = next_moves
         .iter()
         // .filter(|(p, _)| !visited.contains(*p))
-        .min_by(|(_, s1), (_,s2)| s1.cmp(s2))
+        .min_by(|(_, s1), (_, s2)| s1.cmp(s2))
     {
-        let p=*p;
-        let score=*score;
+        let p = *p;
+        let score = *score;
         let on_path = best_moves.get(&p).cloned().unwrap().1;
 
         visited.insert(p);
         next_moves.remove(&p);
         for (p, score) in p.next_moves(score, maze).iter().flatten() {
-            if ! visited.contains(p) {
-                next_moves .entry(*p).and_modify(|best| {
-                    if *score < *best {
-                        *best = *score;
-                    }
-                })
+            if !visited.contains(p) {
+                next_moves
+                    .entry(*p)
+                    .and_modify(|best| {
+                        if *score < *best {
+                            *best = *score;
+                        }
+                    })
                     .or_insert(*score);
             }
             best_moves

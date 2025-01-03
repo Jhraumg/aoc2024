@@ -32,7 +32,6 @@ pub fn part_two(input: &str) -> Option<usize> {
     let secrets3: Vec<_> = secrets2.iter().copied().map(update_secret).collect();
     let secrets4: Vec<_> = secrets3.iter().copied().map(update_secret).collect();
 
-
     let first_encouters: Vec<FxHashMap<[isize; 4], usize>> = (0..secrets.len())
         .into_par_iter()
         .map(|i| {
@@ -43,7 +42,8 @@ pub fn part_two(input: &str) -> Option<usize> {
                 (secrets3[i] % 10) as isize - (secrets2[i] % 10) as isize,
                 (secrets4[i] % 10) as isize - (secrets3[i] % 10) as isize,
             ];
-            let mut first_encounter: FxHashMap<[isize; 4], usize> = FxHashMap::from_iter(vec![(change,secret)]);
+            let mut first_encounter: FxHashMap<[isize; 4], usize> =
+                FxHashMap::from_iter(vec![(change, secret % 10)]);
 
             for _ in 0..2000 - 4 {
                 let new_sec = update_secret(secret);
@@ -53,8 +53,8 @@ pub fn part_two(input: &str) -> Option<usize> {
                     change[3],
                     (new_sec % 10) as isize - (secret % 10) as isize,
                 ];
-                first_encounter.entry(new_change).or_insert(new_sec % 10);
                 secret = new_sec;
+                first_encounter.entry(new_change).or_insert(new_sec % 10);
                 change = new_change;
             }
             first_encounter
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        // assert_eq!(result, None);
+        let result = part_two("1\n2\n3\n2024");
+        assert_eq!(result, Some(23));
     }
 }

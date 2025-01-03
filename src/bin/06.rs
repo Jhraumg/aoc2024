@@ -1,7 +1,5 @@
-
-use std::fmt::{Display, Formatter, Write};
-use std::str::FromStr;
 use rustc_hash::FxHashSet;
+use std::str::FromStr;
 
 advent_of_code::solution!(6);
 
@@ -67,9 +65,9 @@ impl FromStr for Area {
             })
             .next()
             .unwrap();
-        let mut visited :FxHashSet<Point>= Default::default();
+        let mut visited: FxHashSet<Point> = Default::default();
         visited.insert(guard);
-        let mut visited_dir:FxHashSet<(Point,Dir)> = Default::default();
+        let mut visited_dir: FxHashSet<(Point, Dir)> = Default::default();
         visited_dir.insert((guard, gdir));
 
         Ok(Self {
@@ -84,30 +82,6 @@ impl FromStr for Area {
     }
 }
 
-impl Display for Area {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                if self.guard == (Point { x, y }) {
-                    f.write_char(match self.gdir {
-                        Dir::N => '^',
-                        Dir::W => '<',
-                        Dir::S => 'v',
-                        Dir::E => '>',
-                    })?
-                } else if self.obstacles.contains(&Point { x, y }) {
-                    f.write_char('#')?
-                } else if self.visited.contains(&Point { x, y }) {
-                    f.write_char('X')?
-                } else {
-                    f.write_char('.')?
-                };
-            }
-            f.write_char('\n')?;
-        }
-        Ok(())
-    }
-}
 impl Area {
     fn next_move(&self) -> (Point, Dir) {
         let Point { x, y } = self.guard;
@@ -150,16 +124,17 @@ impl Area {
     fn tick(&mut self, check_loops: bool) -> (bool, bool) {
         (self.guard, self.gdir) = self.next_move();
 
-        assert!(!self.obstacles.contains(&self.guard));
-        assert!(self.guard.x < self.width);
-        assert!(self.guard.y < self.height);
+        debug_assert!(!self.obstacles.contains(&self.guard));
+        debug_assert!(self.guard.x < self.width);
+        debug_assert!(self.guard.y < self.height);
 
-        self.visited.insert(self.guard);
         if check_loops {
             if self.visited_dir.contains(&(self.guard, self.gdir)) {
                 return (false, true);
             }
             self.visited_dir.insert((self.guard, self.gdir));
+        } else {
+            self.visited.insert(self.guard);
         }
 
         let will_exit = match self.gdir {
@@ -172,31 +147,30 @@ impl Area {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<usize> {
     let mut area = Area::from_str(input).unwrap();
 
     while !area.tick(false).0 {}
 
-    Some(area.visited.len() as u32)
+    Some(area.visited.len())
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<usize> {
     let mut area = Area::from_str(input).unwrap();
 
-    let mut new_obstacles :FxHashSet<_>= Default::default();
+    let mut new_obstacles: FxHashSet<_> = Default::default();
     let mut count = 0;
 
     // for each tick, we try to replace the next move with an obstacle, then
     // see if it loops
     // we do it only if next move would lead to a never visited place
     loop {
-        // cloning area avoid restarting path from the beginning
         // loops must be checked for original area
         // to be available in new_area
         let (next_move, _) = area.next_move();
 
-        if !new_obstacles.contains(&next_move) {
-            new_obstacles.insert(next_move);
+        if new_obstacles.insert(next_move) {
+            // cloning area avoid restarting path from the beginning
             let mut new_area = area.clone();
             new_area.obstacles.insert(next_move);
 
